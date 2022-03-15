@@ -2,6 +2,18 @@ local array = require("resty.array")
 local pairs = pairs
 local ipairs = ipairs
 local select = select
+local nkeys
+if ngx then
+  nkeys = require "table.nkeys"
+else
+  nkeys = function(t)
+    local n = 0
+    for _, _ in pairs(t) do
+      n = n + 1
+    end
+    return n
+  end
+end
 
 local object = setmetatable({}, {
   __call = function(t, attrs)
@@ -63,7 +75,13 @@ function object.contains(t, o)
 end
 
 function object.__eq(t, o)
-  return object.contains(t, o) and object.contains(o, t)
+  local nt = nkeys(t)
+  local no = nkeys(o)
+  if nt ~= no then
+    return false
+  else
+    return object.contains(t, o)
+  end
 end
 object.equals = object.__eq
 
