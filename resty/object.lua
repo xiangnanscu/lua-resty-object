@@ -85,6 +85,18 @@ function object.__eq(t, o)
 end
 object.equals = object.__eq
 
+function object.copy(t)
+  local v_copy = object:new{}
+  for key, value in pairs(t) do
+    if type(value) == 'table' then
+      v_copy[key] = object.copy(value)
+    else
+      v_copy[key] = value
+    end
+  end
+  return v_copy
+end
+
 if select('#', ...) == 0 then
   assert(object {a = 1, b = 2, c = 3}:keys():as_set() == array {'a', 'b', 'c'}:as_set())
   assert(object {a = 1, b = 2, c = 3}:values():as_set() == array {1, 2, 3}:as_set())
@@ -95,6 +107,8 @@ if select('#', ...) == 0 then
   assert(object.from_entries(object {a = 1, b = 2}:entries():map(function(e)
     return {'k' .. e[1], 100 + e[2]}
   end)) == object {ka = 101, kb = 102})
+  local o = object {a = 1, b = {c = 3, d = 4}}
+  assert(o:copy() == o)
   print("all tests passed!")
 end
 
