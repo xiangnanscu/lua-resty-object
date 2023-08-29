@@ -1,5 +1,9 @@
 # lua-resty-object
 lua object inspired by javascript object
+# install
+```sh
+opm get xiangnanscu/lua-resty-object
+```
 # Synopsis
 ```lua
 local object = require("resty.object")
@@ -21,3 +25,7 @@ assert(object.from_entries(object{a=1,b=2}:entries():map(function(e) return {'k'
 deeply compare if `t` equals `o`.
 ## object.contains(t, o)
 deeply compare if `t` contains `o`.
+# test
+```sh
+busted .
+```

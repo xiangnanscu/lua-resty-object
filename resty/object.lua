@@ -1,4 +1,3 @@
-local nkeys        = require "table.nkeys"
 local pairs        = pairs
 local ipairs       = ipairs
 local select       = select
@@ -12,11 +11,12 @@ local table_remove = table.remove
 local table_insert = table.insert
 local table_sort   = table.sort
 local error        = error
-local table_new, table_clear, clone
+local table_new, table_clear, nkeys, clone
 if ngx then
   table_clear = table.clear
-  table_new = table.new
-  clone = require("table.clone")
+  table_new   = table.new
+  nkeys       = require "table.nkeys"
+  clone       = require("table.clone")
 else
   table_new = function(narray, nhash)
     return {}
@@ -25,6 +25,13 @@ else
     for key, _ in pairs(self) do
       self[key] = nil
     end
+  end
+  nkeys = function(self)
+    local n = 0
+    for key, _ in pairs(self) do
+      n = n + 1
+    end
+    return n
   end
   clone = function(self)
     local copy = {}
@@ -691,94 +698,6 @@ function object.combine(self, n)
   else
     return object {}
   end
-end
-
-if select('#', ...) == 0 then
-  local inspect = require "resty.inspect"
-  local p = function(e)
-    print(inspect(e))
-  end
-  assert(object { a = 1, b = 2, c = 3 }:keys():sort() == object { 'a', 'b', 'c' })
-  assert(object { a = 1, b = 2, c = 3 }:values():sort() == object { 1, 2, 3 })
-  assert(object { a = 1, b = 2 } == object { a = 1, b = 2 })
-  assert(object { a = 1, b = { c = 3, d = 4 } } == object { a = 1, b = { c = 3, d = 4 } })
-  assert(object { a = 1, b = { c = 3, d = 4 } } ~= object { a = 1, b = { c = 3, d = 5 } })
-  assert(object { a = 1 }:assign({ b = 2 }, { c = 3 }) == object { a = 1, b = 2, c = 3 })
-  assert(object.from_entries(object { a = 1, b = 2 }:entries():map(function(e)
-    return { 'k' .. e[1], 100 + e[2] }
-  end)) == object { ka = 101, kb = 102 })
-  local o = object { a = 1, b = { c = 3, d = 4 } }
-  assert(o:copy() == o)
-  -- array part
-  assert(object { 1, 2, 3 } + object { 3, 4 } == object { 1, 2, 3, 3, 4 })
-  assert(object { 1, 2, 3 } - object { 3, 4 } == object { 1, 2 })
-  assert(object { 'a', 'b', 'c' }:entries() == object { { 1, 'a' }, { 2, 'b' }, { 3, 'c' } })
-  assert(object { 1, 2, 3 }:every(function(n)
-    return n > 0
-  end) == true)
-  assert(object { 0, 0, 0 }:fill(8) == object { 8, 8, 8 })
-  assert(object { 0, 0, 0 }:fill(8, 2, 3) == object { 0, 8, 8 })
-  assert(object { 1, 'not', 3, 'number' }:filter(function(e)
-    return tonumber(e)
-  end) == object { 1, 3 })
-  assert(object { { id = 1 }, { id = 101 }, { id = 3 } }:find(function(e)
-    return e.id == 101
-  end).id == 101)
-  assert(object { { id = 1 }, { id = 101 }, { id = 3 } }:find_index(function(e)
-    return e.id == 101
-  end) == 2)
-  assert(object { 1, { 2 }, 3 }:flat() == object { 1, 2, 3 })
-  object { 'a', 'b', 'c' }:for_each(print)
-  assert(object { 1, 2, 3 }:includes(1) == true)
-  assert(object { 1, 2, 3 }:includes(1, 4) == false)
-  assert(object { 1, 2, 3 }:includes(5) == false)
-  assert(object { 'a', 'b' }:index_of('b') == 2)
-  assert(object { 'a', 'b', 'c' }:join('|') == 'a|b|c')
-  assert(object { 'a', 'b', 'c' }:keys() == object { 1, 2, 3 })
-  assert(object { 'a', 'b', 'b', 'c' }:last_index_of('b', -1) == 3)
-  assert(object { 'a', 'b', 'b', 'c' }:index_of('b') == 2)
-  assert(object { 1, 2, 3 }:map(function(n)
-    return n + 10
-  end) == object { 11, 12, 13 })
-  assert(object { 1, 2, 100 }:pop() == 100)
-  assert(object { 1, 2, 3 }:reverse() == object { 3, 2, 1 })
-  local a = object { 1, 2, 3 }
-  assert(a:push(4, 5, 6) == 6)
-  assert(a == object { 1, 2, 3, 4, 5, 6 })
-  assert(a:shift() == 1)
-  assert(a == object { 2, 3, 4, 5, 6 })
-  assert(object { 1, 2, 3 }:reduce(function(x, y)
-    return x + y
-  end) == 6)
-  assert(object { 1, 2, 3, 4 }:slice() == object { 1, 2, 3, 4 })
-  assert(object { 1, 2, 3, 4 }:slice(2) == object { 2, 3, 4 })
-  assert(object { 1, 2, 3, 4 }:slice(1, -1) == object { 1, 2, 3, 4 })
-  assert(object { 1, 2, 3, 4 }:slice(2, 3) == object { 2, 3 })
-  assert(object { 1, 2, 3 }:some(function(n)
-    return n < 0
-  end) == false)
-  assert(object { -1, 2, 3 }:some(function(n)
-    return n < 0
-  end) == true)
-  local b = object {}
-  assert(b:splice(1, 0, 1, 2, 3, 4) == object {})
-  assert(b == object { 1, 2, 3, 4 })
-  assert(b:splice(1, 1) == object { 1 })
-  assert(b == object { 2, 3, 4 })
-  assert(b:splice(2, 1, 5, 6) == object { 3 })
-  assert(b == object { 2, 5, 6, 4 })
-  local c = object {}
-  assert(c:unshift('c', 'd', 'e') == 3)
-  assert(c == object { 'c', 'd', 'e' })
-  p(c)
-  assert(c:unshift('a', 'b') == 5)
-  assert(c == object { 'a', 'b', 'c', 'd', 'e' })
-  assert(object { { id = 1 }, { id = 101 }, { id = 3 } }:map_key('id') == object { 1, 101, 3 })
-  assert(object { 1, 2, 2, 3 }:dup() == 2)
-  assert(object { 1, 2, 2, 3, 4, 4, 4, 5 }:dups() == object { 2, 2, 4, 4, 4 })
-  assert(object { 1, 2, 2, 3, 4, 4, 4, 5 }:uniq() == object { 1, 2, 3, 4, 5 })
-  p(object { 1, 2, 3, 4 }:combine(2))
-  print("all tests passed!")
 end
 
 return object
