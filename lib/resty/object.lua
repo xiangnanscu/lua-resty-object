@@ -330,8 +330,6 @@ function object.group_by(self, callback)
 end
 
 function object.includes(self, value, s)
-  -- Array{'a', 'b', 'c'}:includes('c', 3)    // true
-  -- Array{'a', 'b', 'c'}:includes('c', 100)  // false
   s = resolve_index(self, s, false, true)
   for i = s, #self do
     if self[i] == value then
@@ -397,7 +395,7 @@ function object.reduce(self, callback, init)
     i = 2
   end
   if init == nil and #self == 0 then
-    error("Reduce of empty Array with no initial value")
+    error("Reduce of empty object with no initial value")
   end
   for j = i, #self do
     init = callback(init, self[j], j, self)
@@ -412,7 +410,7 @@ function object.reduce_right(self, callback, init)
     i = i - 1
   end
   if init == nil and #self == 0 then
-    error("Reduce of empty Array with no initial value")
+    error("Reduce of empty object with no initial value")
   end
   for j = i, 1, -1 do
     init = callback(init, self[j], j, self)
