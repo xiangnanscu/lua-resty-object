@@ -1,3 +1,4 @@
+local array = require("resty.array")
 local pairs        = pairs
 local ipairs       = ipairs
 local select       = select
@@ -52,20 +53,6 @@ local function object_class_tostring(self, ...)
 end
 local function object_instance_tostring(self, ...)
   return string.format('<instance %s>', rawget(self.__mro__[1], '__name__') or '?')
-end
-local function super(cls, self)
-  return setmetatable({}, {
-    __index = function(_, key)
-      for i = 2, #cls.__mro__ do
-        local func = rawget(cls.__mro__[i], key)
-        if func ~= nil then
-          return function(_, ...)
-            return func(self, ...)
-          end
-        end
-      end
-    end
-  })
 end
 local function resolve_index(self, index, is_end, no_max)
   if index == nil then
@@ -130,10 +117,6 @@ function object.init(self, attrs)
   return self
 end
 
-function object.super(self, cls)
-  return super(cls, self)
-end
-
 function object.assign(self, ...)
   local n = select("#", ...)
   for i = 1, n do
@@ -164,8 +147,8 @@ object.fromEntries = object.from_entries
 
 function object.keys(self)
   local res = setmetatable(table_new(nkeys(self), 0), object)
-  for key, _ in pairs(self) do
-    res[#res + 1] = key
+  for k, _ in pairs(self) do
+    res[#res + 1] = k
   end
   return res
 end
@@ -178,24 +161,6 @@ function object.values(self)
   return res
 end
 
--- function object.equals(self, o)
---   if type(o) ~= 'table' or #o ~= #self then
---     return false
---   end
---   for i = 1, #self do
---     local tt, ot = type(self[i]), type(o[i])
---     if tt ~= ot then
---       return false
---     elseif tt ~= 'table' then
---       if self[i] ~= o[i] then
---         return false
---       end
---     elseif not object.equals(self[i], o[i]) then
---       return false
---     end
---   end
---   return true
--- end
 function object.contains(self, o)
   for k, v in pairs(o) do
     if self[k] ~= v and (type(v) ~= 'table' or type(self[k]) ~= 'table' or not object.equals(v, self[k])) then
