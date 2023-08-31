@@ -7,20 +7,13 @@ local table           = table
 local rawget          = rawget
 local type            = type
 local setmetatable    = setmetatable
-local table_new, table_clear, nkeys, clone
+local table_new, nkeys
 if ngx then
-  table_clear = table.clear
-  table_new   = table.new
-  nkeys       = require "table.nkeys"
-  clone       = require("table.clone")
+  table_new = table.new
+  nkeys     = require "table.nkeys"
 else
   table_new = function(narray, nhash)
     return {}
-  end
-  table_clear = function(self)
-    for key, _ in pairs(self) do
-      self[key] = nil
-    end
   end
   nkeys = function(self)
     local n = 0
@@ -28,13 +21,6 @@ else
       n = n + 1
     end
     return n
-  end
-  clone = function(self)
-    local copy = {}
-    for key, value in pairs(self) do
-      copy[key] = value
-    end
-    return copy
   end
 end
 
@@ -59,26 +45,26 @@ object.__index = object
 object.__bases__ = {}
 object.__mro__ = { object }
 
-function object.__eq(self, o)
-  return object.equals(self, o)
+function object.equals(self, o)
+  local nt = nkeys(self)
+  local no = nkeys(o)
+  if nt ~= no then
+    return false
+  else
+    return object.contains(self, o)
+  end
 end
 
--- {1,2} + {2,3} = {1,2,2,3}
-function object.__add(self, o)
-  return object.concat(self, o)
-end
-
--- {1,2} - {2,3} = {1}
-function object.__sub(self, o)
-  local res = setmetatable({}, object)
-  local od = o:as_set()
-  for i = 1, #self do
-    if not od[self[i]] then
-      res[#res + 1] = self[i]
+function object.contains(self, o)
+  for k, v in pairs(o) do
+    if self[k] ~= v and (type(v) ~= 'table' or type(self[k]) ~= 'table' or not object.equals(v, self[k])) then
+      return false
     end
   end
-  return res
+  return true
 end
+
+object.__eq = object.equals
 
 function object.new(cls)
   return setmetatable({}, cls)
@@ -89,8 +75,7 @@ function object.init(self, ...)
 end
 
 function object.assign(self, ...)
-  local n = select("#", ...)
-  for i = 1, n do
+  for i = 1, select("#", ...) do
     for k, v in pairs(select(i, ...)) do
       self[k] = v
     end
@@ -99,7 +84,7 @@ function object.assign(self, ...)
 end
 
 function object.entries(self)
-  local res = object()
+  local res = setmetatable({}, object)
   for k, v in pairs(self) do
     res[#res + 1] = { k, v }
   end
@@ -130,25 +115,6 @@ function object.values(self)
     res[#res + 1] = v
   end
   return res
-end
-
-function object.contains(self, o)
-  for k, v in pairs(o) do
-    if self[k] ~= v and (type(v) ~= 'table' or type(self[k]) ~= 'table' or not object.equals(v, self[k])) then
-      return false
-    end
-  end
-  return true
-end
-
-function object.equals(self, o)
-  local nt = nkeys(self)
-  local no = nkeys(o)
-  if nt ~= no then
-    return false
-  else
-    return object.contains(self, o)
-  end
 end
 
 function object.copy(self)
