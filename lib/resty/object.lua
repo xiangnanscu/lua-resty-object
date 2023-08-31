@@ -57,7 +57,7 @@ end
 
 function object.contains(self, o)
   for k, v in pairs(o) do
-    if self[k] ~= v and (type(v) ~= 'table' or type(self[k]) ~= 'table' or not object.equals(v, self[k])) then
+    if self[k] ~= v and (type(v) ~= 'table' or type(self[k]) ~= 'table' or not object.equals(self[k], v)) then
       return false
     end
   end
@@ -118,15 +118,22 @@ function object.values(self)
 end
 
 function object.copy(self)
-  local v_copy = setmetatable({}, object)
-  for key, value in pairs(self) do
-    if type(value) == 'table' then
-      v_copy[key] = object.copy(value)
+  local visited = {}
+  local function circle_copy(v)
+    if type(v) ~= 'table' then
+      return v
+    elseif visited[v] then
+      return visited[v]
     else
-      v_copy[key] = value
+      local t = {}
+      visited[v] = t
+      for key, value in pairs(v) do
+        t[key] = circle_copy(value)
+      end
+      return t
     end
   end
-  return v_copy
+  return circle_copy(self)
 end
 
 return object
