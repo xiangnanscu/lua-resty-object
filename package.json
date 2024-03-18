@@ -4,9 +4,9 @@
   "description": "lua object inspired by javascript object",
   "main": "index.js",
   "scripts": {
+    "prerc": "sed -i.bak 's/version = \\([0-9]\\+\\)\\.\\([0-9]\\+\\)/echo version = \\1.$((\\2+1))/e' dist.ini && rm dist.ini.bak",
     "rc": "yarn push",
-    "postrc": "yarn publish",
-    "publish": "opm upload && opm clean dist",
+    "postrc": "opm upload && opm clean dist",
     "commit": "git add . && git commit -am ",
     "g": "yarn push",
     "push": "yarn commit",
@@ -14,7 +14,6 @@
     "_pull": "git pull --recurse-submodules origin",
     "pull": "uname -s | grep -q Darwin && yarn _pull || while true; do timeout 10 yarn _pull && break; done",
     "postpush": "uname -s | grep -q Darwin && yarn _push || while true; do timeout 10 yarn _push && break; done",
-    "prerec": "sed -i.bak 's/version = \\([0-9]\\+\\)\\.\\([0-9]\\+\\)/echo version = \\1.$((\\2+1))/e' dist.ini && rm dist.ini.bak",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
