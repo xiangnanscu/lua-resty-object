@@ -1,12 +1,11 @@
-local basearray_setup = require("resty.basearray").setup
-local pairs           = pairs
-local ipairs          = ipairs
-local select          = select
-local string          = string
-local table           = table
-local rawget          = rawget
-local type            = type
-local setmetatable    = setmetatable
+local pairs        = pairs
+local ipairs       = ipairs
+local select       = select
+local string       = string
+local table        = table
+local rawget       = rawget
+local type         = type
+local setmetatable = setmetatable
 local table_new, nkeys
 if ngx then
   table_new = table.new
@@ -37,7 +36,6 @@ local function object_instance_tostring(self, ...)
 end
 
 local object = setmetatable({}, { __call = object_call, __tostring = object_class_tostring })
-basearray_setup(object)
 object.__call = object_call
 object.__tostring = object_instance_tostring
 object.__name__ = 'object'
@@ -98,8 +96,6 @@ function object.from_entries(arr)
   end
   return res
 end
-
-object.fromEntries = object.from_entries
 
 function object.keys(self)
   local res = setmetatable(table_new(nkeys(self), 0), object)
