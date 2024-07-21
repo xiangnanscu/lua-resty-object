@@ -10,8 +10,8 @@
     "commit": "git add . && git commit -am ",
     "g": "yarn push",
     "push": "yarn commit",
-    "_push": "git push --recurse-submodules=on-demand origin",
-    "_pull": "git pull --recurse-submodules origin",
+    "_push": "git push origin",
+    "_pull": "git pull origin",
     "pull": "uname -s | grep -q Darwin && yarn _pull || while true; do timeout 10 yarn _pull && break; done",
     "postpush": "uname -s | grep -q Darwin && yarn _push || while true; do timeout 10 yarn _push && break; done",
     "test": "echo \"Error: no test specified\" && exit 1"
